@@ -13,6 +13,10 @@ window.addEventListener('mousemove', (event) => {
   mouse.y = event.y;
 })
 
+window.addEventListener('click', () => {
+  canon.fire();
+})
+
 class Canon {
   constructor(context, color, dlt, x, y, angle, length) {
     this.c = context;
@@ -24,6 +28,7 @@ class Canon {
     this.y2 = undefined;
     this.angle = angle;
     this.length = length;
+    this.canonBall = undefined;
 
     this.draw = () => {
       c.beginPath();
@@ -74,18 +79,54 @@ class Canon {
       if (this.angle < -85 || this.angle > -10) this.dlt = -this.dlt;
 
       this.draw();
+
+      // console.log(this.canonBall);
+      if (typeof this.canonBall === 'object') {
+        // console.log('Canonball is true');
+        this.canonBall.update();
+      }
     };
   }
-  //
-  // fire = () => {
-  //   var pro = {
-	// 			x: this.x1,
-	// 			y: this.y2,
-	// 			r: 15,
-	// 			v: 20,
-	// 			theta: 45
-	// 			};
-  // }
+
+  fire() {
+    this.canonBall = new Canonball(this.x1, this.y1, 15, 20, this.angle, 2);
+    // console.log('canon fired!');
+  }
+}
+
+class Canonball {
+  constructor(x, y, radius, velocity, angle, frameCount) {
+    this.x = x;
+    this.y = y;
+    this.radius = radius,
+    this.velocity = velocity,
+    this.angle = angle * -1,
+    this.framecount = frameCount
+
+    this.draw = () => {
+
+    };
+    
+    this.update = () => {
+      var v0x = this.velocity * Math.cos(this.angle * Math.PI/180);
+      var v0y = this.velocity * Math.sin(this.angle * Math.PI/180);
+      // console.log('Velocity of x:', v0x);
+      // console.log('Velocity of y:', v0y);
+
+      var startX = this.x;
+      var startY = this.y;
+      var g = 1.2;
+      if(-this.y<=canvas.height - this.radius && this.x <= canvas.width - this.radius)
+      	{
+          // console.log('canonBall update function is called');
+      		this.y = startY - ( v0y * frameCount - (1/2 * g * Math.pow(frameCount,2)) );
+      		this.x = startX + v0x * frameCount;
+      	}
+      console.log('x value: ', this.x);
+      console.log('y value: ', this.y);
+      this.frameCount+=0.8;
+    };
+  }
 }
 
 let canon = new Canon(c, 'Lavender', -1, 0, canvas.height, -10, 80);
@@ -101,6 +142,9 @@ var pro = {
 var frameCount = 0;
 var v0x = pro.v * Math.cos(pro.theta * Math.PI/180);
 var v0y = pro.v * Math.sin(pro.theta * Math.PI/180);
+// console.log('Velocity of x:', v0x);
+// console.log('Velocity of y:', v0y);
+
 var startX = pro.x;
 var startY = pro.y;
 var g = 1.2;
@@ -110,17 +154,15 @@ var animate = () => {
   c.clearRect(0, 0, innerWidth, innerHeight);
 
   canon.update();
-
+  // canon.fire();
   if(-pro.y<=canvas.height - pro.r && pro.x <= canvas.width - pro.r)
   	{
   		pro.y = startY - ( v0y * frameCount - (1/2 * g * Math.pow(frameCount,2)) );
   		pro.x = startX + v0x * frameCount;
   	}
 
-  console.log('canvas width', canvas.width);
-  console.log('x', pro.x);
-  console.log('y', pro.y);
-
+    // console.log('pro.x', pro.x);
+    // console.log('pro.y:', pro.y);
   c.save();
   c.beginPath();
 	c.fillStyle = "rgba(0, 200, 0, 0.6)";
