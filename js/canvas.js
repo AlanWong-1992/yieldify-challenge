@@ -1,6 +1,6 @@
 var canvas = document.querySelector('canvas');
 canvas.width = 800;
-canvas.height = 600;
+canvas.height = 400;
 
 var c = canvas.getContext('2d');
 var mouse = {
@@ -35,7 +35,6 @@ class Canon {
       c.arc(this.x1, this.y1, 45, 0, Math.PI * 2, false);
       c.fillStyle = this.color;
       c.fill();
-      c.lineWidth = '2';
       c.stroke();
 
       c.beginPath();
@@ -43,10 +42,10 @@ class Canon {
       c.lineTo(this.x2, this.y2);
       c.lineWidth = 10;
       c.stroke();
+      c.closePath();
     };
 
     this.update = () => {
-
       var updateAngle = () => {
         var dx = mouse.x - 0;
         var dy = canvas.height - mouse.y;
@@ -80,98 +79,91 @@ class Canon {
 
       this.draw();
 
-      // console.log(this.canonBall);
       if (typeof this.canonBall === 'object') {
-        // console.log('Canonball is true');
         this.canonBall.update();
       }
     };
   }
 
   fire() {
-    this.canonBall = new Canonball(this.x1, this.y1, 15, 20, this.angle, 2);
-    // console.log('canon fired!');
+    this.canonBall = new Canonball(this.x2, this.y2, 5, 20, this.angle, 1, 0.85, 0.3);
   }
 }
 
 class Canonball {
-  constructor(x, y, radius, velocity, angle, frameCount) {
-    this.x = x;
-    this.y = y;
-    this.radius = radius,
-    this.velocity = velocity,
-    this.angle = angle * -1,
-    this.framecount = frameCount
+  constructor(x, y, radius, velocity, angle, time, elasticity, friction) {
+    this.x = 0;
+    this.y = canvas.height - 100;
+    this.startX = x;
+    this.startY = y;
+    this.radius = radius;
+    this.velocity = 40,
+    this.radians= (angle * - 1) * Math.PI/180,
+    this.gravity = 2.9;
+    this.v0x = this.velocity * Math.cos(this.radians);
+    this.v0y = this.velocity * Math.sin(this.radians);
+    this.time = time;
+    this.elasticity = elasticity;
+    this.friction = friction;
 
     this.draw = () => {
-
+      c.save();
+      c.beginPath();
+    	c.fillStyle = "rgba(0, 200, 0, 0.6)";
+    	c.arc(this.x ,this.y ,this.radius , 0, Math.PI*2, true);
+    	c.fill();
+    	c.stroke();
+    	c.closePath();
+      c.restore();
     };
-    
-    this.update = () => {
-      var v0x = this.velocity * Math.cos(this.angle * Math.PI/180);
-      var v0y = this.velocity * Math.sin(this.angle * Math.PI/180);
-      // console.log('Velocity of x:', v0x);
-      // console.log('Velocity of y:', v0y);
 
-      var startX = this.x;
-      var startY = this.y;
-      var g = 1.2;
-      if(-this.y<=canvas.height - this.radius && this.x <= canvas.width - this.radius)
-      	{
-          // console.log('canonBall update function is called');
-      		this.y = startY - ( v0y * frameCount - (1/2 * g * Math.pow(frameCount,2)) );
-      		this.x = startX + v0x * frameCount;
-      	}
-      console.log('x value: ', this.x);
-      console.log('y value: ', this.y);
-      this.frameCount+=0.8;
+    this.update = () => {
+
+      if (this.y + this.radius < canvas.height) {
+
+          // Calculations for the position of x and y based on formula for projectile motion
+      		this.y = this.startY - (this.v0y * this.time - (1/2 * this.gravity * Math.pow(this.time,2)));
+      		this.x = this.startX + this.v0x * this.time;
+
+          // detection of ball hitting floor on y-axis
+          if (this.y + this.radius > canvas.height) {
+
+            // Reset the startX and startY so that it can be used again in the formula-
+            // for projectile motion, but now starting where the ball landed.
+            this.startX = this.x;
+            this.startY = canvas.height;
+
+            // Reset time to t0 so that velocity calculations are back to V0
+            this.time = time;
+
+            // Reset y position to be above the floor otherwise above if clause would
+            // be false
+            this.y = canvas.height - this.radius - 1;
+
+            // v0y needs to be reduced as next bounce will be lower
+            this.v0y *= this.elasticity;
+
+            // v0x needs to be adjusted everytime floor is hit as there is friction
+            // if v0x is less than 0 then stop the movement of the ball along x-axis
+            this.v0x > 0 ? this.v0x -= this.friction : this.v0x = 0;
+
+          }
+      }
+
+      this.time+=0.5;
+
+      this.draw();
     };
   }
 }
 
 let canon = new Canon(c, 'Lavender', -1, 0, canvas.height, -10, 80);
 
-var pro = {
-    x: 0,
-    y: canvas.height,
-    r: 2,
-    v: 25,
-    theta: 45
-    };
-
-var frameCount = 0;
-var v0x = pro.v * Math.cos(pro.theta * Math.PI/180);
-var v0y = pro.v * Math.sin(pro.theta * Math.PI/180);
-// console.log('Velocity of x:', v0x);
-// console.log('Velocity of y:', v0y);
-
-var startX = pro.x;
-var startY = pro.y;
-var g = 1.2;
-
 var animate = () => {
   requestAnimationFrame(animate);
-  c.clearRect(0, 0, innerWidth, innerHeight);
+  c.clearRect(0, 0, canvas.width, canvas.height);
 
   canon.update();
-  // canon.fire();
-  if(-pro.y<=canvas.height - pro.r && pro.x <= canvas.width - pro.r)
-  	{
-  		pro.y = startY - ( v0y * frameCount - (1/2 * g * Math.pow(frameCount,2)) );
-  		pro.x = startX + v0x * frameCount;
-  	}
-
-    // console.log('pro.x', pro.x);
-    // console.log('pro.y:', pro.y);
-  c.save();
-  c.beginPath();
-	c.fillStyle = "rgba(0, 200, 0, 0.6)";
-	c.arc(pro.x ,pro.y ,pro.r , 0, Math.PI*2, true);
-	c.fill();
-	c.stroke();
-	c.closePath();
-  c.restore();
-  frameCount+=0.8;
 
 }
 
