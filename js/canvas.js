@@ -86,7 +86,7 @@ class Canon {
   }
 
   fire() {
-    this.canonBall = new Canonball(this.x2, this.y2, 5, 20, this.angle, 1, 0.85, 0.3);
+    this.canonBall = new Canonball(this.x2, this.y2, 5, 100, this.angle, 1, 0.85, 0.3);
   }
 }
 
@@ -97,8 +97,8 @@ class Canonball {
     this.startX = x;
     this.startY = y;
     this.radius = radius;
-    this.velocity = 40,
-    this.radians= (angle * - 1) * Math.PI/180,
+    this.velocity = Math.random() * velocity;
+    this.radians= (angle * - 1) * Math.PI/180;
     this.gravity = 2.9;
     this.v0x = this.velocity * Math.cos(this.radians);
     this.v0y = this.velocity * Math.sin(this.radians);
